@@ -8,7 +8,7 @@ st.set_page_config(page_title="Explainable XLM-R Sentiment Analysis")
 
 @st.cache_resource
 def load_model():
-    model_dir = "./model"
+    model_dir = "bimobirra/explainable-xlmr-code-mixed-low-resource-lang"
 
     analyzer = pipeline(
         task="text-classification",
