@@ -36,7 +36,7 @@ if st.button("Analyze", type="primary"):
             score = result["score"] * 100
 
             if label == "LABEL_2":
-                st.success(f"Positve, confidence score: {score:.2f}%")
+                st.success(f"Positive, confidence score: {score:.2f}%")
                 color = "success"
             elif label == "LABEL_1":
                 st.info(f"Neutral, confidence score: {score:.2f}%")
@@ -55,6 +55,6 @@ if st.button("Analyze", type="primary"):
 
             fig, ax = plt.subplots(figsize=(10,5))
 
-            shap.plots.bar(shap_values[0, :, class_index], show=False)
+            shap.plots.bar(shap_values[0, :, class_index], show=False, clustering_cutoff=0)
             st.pyplot(fig)
             plt.clf()
