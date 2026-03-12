@@ -5,9 +5,6 @@ import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="Explainable XLM-R Sentiment Analysis")
 
-# ===============================
-# LOAD MODEL
-# ===============================
 @st.cache_resource
 def load_model():
 
@@ -49,6 +46,10 @@ text_input = st.text_area("Input Text", height=150)
 
 if st.button("Analyze", type="primary"):
 
+    if len(text_input.split()) < 2:
+        st.warning("Please enter at least 2 words for explaination.")
+        st.stop()
+
     if text_input.strip() == "":
         st.warning("Please input text!")
 
@@ -81,6 +82,7 @@ if st.button("Analyze", type="primary"):
 
 
         with st.spinner("Building explanation..."):
+            import re
 
             shap_values = explainer([text_input])
 
@@ -89,10 +91,12 @@ if st.button("Analyze", type="primary"):
             words = shap_values.data[0]
             scores = shap_values.values[0][:, class_index]
 
+            clean_words = [re.sub(r"[^\w\s]", "", w) for w in words]
+
             explanation = shap.Explanation(
                 values=scores,
                 base_values=shap_values.base_values[0][class_index],
-                data=words,
+                data=clean_words,
                 feature_names=words
             )
 
@@ -101,7 +105,7 @@ if st.button("Analyze", type="primary"):
             shap.plots.bar(
                 explanation,
                 show=False,
-                max_display=len(words)
+                max_display=15
             )
 
             st.pyplot(fig)
