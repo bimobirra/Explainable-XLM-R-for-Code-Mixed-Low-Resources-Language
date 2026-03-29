@@ -1,60 +1,117 @@
 import streamlit as st
 from transformers import pipeline
 import shap
-import streamlit.components.v1 as components
 import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="Explainable XLM-R Sentiment Analysis")
 
 @st.cache_resource
 def load_model():
+<<<<<<< HEAD
     model_dir = "./model"
+=======
+
+    model_dir = "bimobirra/explainable-xlmr-code-mixed-low-resource-lang"
+>>>>>>> cdc5867944a621182387236224e115a8348dc0a7
 
     analyzer = pipeline(
         task="text-classification",
         model=model_dir,
-        tokenizer=model_dir
+        tokenizer=model_dir,
+        return_all_scores=True
     )
 
     return analyzer
 
 analyzer = load_model()
 
+@st.cache_resource
+def load_explainer(_analyzer):
+
+    explainer = shap.Explainer(
+        analyzer,
+        shap.maskers.Text(r"\W+")
+    )
+
+    return explainer
+
+
+explainer = load_explainer(analyzer)
+
+
 st.title("Sentiment Analysis with Explainable XLM-R for Code-Mixed Low-Resource Languages")
-st.markdown("Input Text (Minangkabau Language, Bahasa Indonesia, English) to analyze")
+
+st.markdown(
+    "Input Text (Minangkabau Language, Bahasa Indonesia, English) to analyze"
+)
 
 text_input = st.text_area("Input Text", height=150)
 
+
 if st.button("Analyze", type="primary"):
+
+    if len(text_input.split()) < 2:
+        st.warning("Please enter at least 2 words for explaination.")
+        st.stop()
+
     if text_input.strip() == "":
         st.warning("Please input text!")
 
     else:
-        with st.spinner("Analyzing..."):
-            result = analyzer(text_input)[0]
-            label = result["label"]
-            score = result["score"] * 100
+
+        with st.spinner("Analyzing sentiment..."):
+
+            prediction = analyzer(text_input)[0]
+
+            label = prediction["label"]
+            score = prediction["score"] * 100
 
             if label == "LABEL_2":
-                st.success(f"Positive, confidence score: {score:.2f}%")
-                color = "success"
+                st.success(f"Positive sentiment | confidence: {score:.2f}%")
+
             elif label == "LABEL_1":
-                st.info(f"Neutral, confidence score: {score:.2f}%")
+                st.info(f"Neutral sentiment | confidence: {score:.2f}%")
+
             else:
-                st.error(f"Negative, confidence score: {score:.2f}%")
+                st.error(f"Negative sentiment | confidence: {score:.2f}%")
+
 
         st.markdown("---")
-        st.markdown("Word Analysis (Explainable AI)")
-        st.write("Visualization below shows which word effect the AI's decision making")
 
-        with st.spinner("Building Visualization"):
-            explainer = shap.Explainer(analyzer)
-            shap_values = explainer({text_input})
+        st.subheader("Word Contribution Analysis (Explainable AI)")
+
+        st.write(
+            "The visualization below shows how each word contributes to the model's sentiment prediction."
+        )
+
+
+        with st.spinner("Building explanation..."):
+            import re
+
+            shap_values = explainer([text_input])
 
             class_index = int(label.split("_")[1])
 
-            fig, ax = plt.subplots(figsize=(10,5))
+            words = shap_values.data[0]
+            scores = shap_values.values[0][:, class_index]
 
-            shap.plots.bar(shap_values[0, :, class_index], show=False, clustering_cutoff=0)
+            clean_words = [re.sub(r"[^\w\s]", "", w) for w in words]
+
+            explanation = shap.Explanation(
+                values=scores,
+                base_values=shap_values.base_values[0][class_index],
+                data=clean_words,
+                feature_names=words
+            )
+
+            fig, ax = plt.subplots(figsize=(10, 5))
+
+            shap.plots.bar(
+                explanation,
+                show=False,
+                max_display=15
+            )
+
             st.pyplot(fig)
+
             plt.clf()
