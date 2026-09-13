@@ -46,7 +46,13 @@ if st.button("Analyze", type="primary"):
 
         st.markdown("---")
         st.markdown("Word Analysis (Explainable AI)")
-        st.write("Visualization below shows which word effect the AI's decision making")
+        st.write("The visualization below shows which words influenced the AI's decision.")
+        st.markdown("""
+        **How to read the chart:**
+        - **Red bars (positive values)** → the word *supports* the predicted sentiment.
+        - **Blue bars (negative values)** → the word *opposes* / pulls toward another sentiment.
+        - **The longer the bar**, the stronger the word's influence on the AI's decision.
+        """)
 
         with st.spinner("Building Visualization"):
             masker = shap.maskers.Text(r"\W+")
