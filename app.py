@@ -21,17 +21,6 @@ def load_model():
 
 analyzer = load_model()
 
-def custom_tokenizer(s, return_offset_mapping=True):
-    tokens = []
-    offset_ranges = []
-    for m in re.finditer(r"\S+", s):
-        tokens.append(m.group())
-        offset_ranges.append((m.start(), m.end()))
-    out = {"input_ids": tokens}
-    if return_offset_mapping:
-        out["offset_mapping"] = offset_ranges
-    return out
-
 st.title("Sentiment Analysis with Explainable XLM-R for Code-Mixed Low-Resource Languages")
 st.markdown("Input Text (Minangkabau Language, Bahasa Indonesia, English) to analyze")
 
@@ -60,7 +49,7 @@ if st.button("Analyze", type="primary"):
         st.write("Visualization below shows which word effect the AI's decision making")
 
         with st.spinner("Building Visualization"):
-            masker = shap.maskers.Text(custom_tokenizer)
+            masker = shap.maskers.Text(r"\W+")
             explainer = shap.Explainer(analyzer, masker)
             shap_values = explainer([text_input])
 
