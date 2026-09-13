@@ -3,6 +3,7 @@ from transformers import pipeline
 import shap
 import streamlit.components.v1 as components
 import matplotlib.pyplot as plt
+import re
 
 st.set_page_config(page_title="Explainable XLM-R Sentiment Analysis")
 
@@ -19,6 +20,17 @@ def load_model():
     return analyzer
 
 analyzer = load_model()
+
+def custom_tokenizer(s, return_offset_mapping=True):
+    tokens = []
+    offset_ranges = []
+    for m in re.finditer(r"\S+", s):
+        tokens.appen(m.group())
+        offset_ranges.append((m.start(), m.end()))
+    out = {"input_ids": tokens}
+    if return_offset_mapping:
+        out["offset_mapping"] = offset_ranges
+    return out
 
 st.title("Sentiment Analysis with Explainable XLM-R for Code-Mixed Low-Resource Languages")
 st.markdown("Input Text (Minangkabau Language, Bahasa Indonesia, English) to analyze")
@@ -48,8 +60,9 @@ if st.button("Analyze", type="primary"):
         st.write("Visualization below shows which word effect the AI's decision making")
 
         with st.spinner("Building Visualization"):
-            explainer = shap.Explainer(analyzer)
-            shap_values = explainer({text_input})
+            masker = shap.maskers.Text(custom_tokenizer)
+            explainer = shap.Explainer(analyzer, masker)
+            shap_values = explainer([text_input])
 
             class_index = int(label.split("_")[1])
 
