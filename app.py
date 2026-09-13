@@ -25,7 +25,7 @@ def custom_tokenizer(s, return_offset_mapping=True):
     tokens = []
     offset_ranges = []
     for m in re.finditer(r"\S+", s):
-        tokens.appen(m.group())
+        tokens.append(m.group())
         offset_ranges.append((m.start(), m.end()))
     out = {"input_ids": tokens}
     if return_offset_mapping:
